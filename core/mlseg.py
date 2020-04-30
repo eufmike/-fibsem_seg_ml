@@ -57,13 +57,20 @@ def create_features(img, img_gray, label, train=True):
     feature_img[:,:,1] = create_binary_pattern(img_gray, lbp_points, lbp_radius)
     feature_img = feature_img[h_ind:-h_ind, h_ind:-h_ind]
     features = feature_img.reshape(feature_img.shape[0]*feature_img.shape[1], feature_img.shape[2])
-
+    
+    
+    # Select partial pixles when train = True
+    # apply to images
     if train == True:
         ss_idx = subsample_idx(0, features.shape[0], num_examples)
         features = features[ss_idx]
     else:
         ss_idx = []
-
+    
+    h_features = haralick_features(img_gray, h_neigh, ss_idx)
+    features = np.hstack((features, h_features))
+    
+    # apply to labels
     if train == True:
         label = label[h_ind:-h_ind, h_ind:-h_ind]
         labels = label.reshape(label.shape[0]*label.shape[1], 1)
@@ -91,6 +98,10 @@ def create_features_predict(img, img_gray):
     print(feature_img.shape)
     features = feature_img.reshape(feature_img.shape[0]*feature_img.shape[1], feature_img.shape[2])
 
+    ss_idx = []
+    h_features = haralick_features(img_gray, h_neigh, ss_idx)
+    features = np.hstack((features, h_features))
+    
     return features
 
 def create_training_dataset(img_stack, label_stack):
@@ -152,7 +163,7 @@ def calc_haralick(roi):
     [feature_vec.append(i) for i in mean_ht[0:9]]
     return np.array(feature_vec)
 
-def harlick_features(img, h_neigh, ss_idx):
+def haralick_features(img, h_neigh, ss_idx):
 
     print ('Computing haralick features.')
     size = h_neigh
